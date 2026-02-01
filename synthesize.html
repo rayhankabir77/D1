@@ -8,8 +8,10 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
     
-    <!-- Scripts -->
+    <!-- Telegram SDK - সবার আগে লোড হবে -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    
+    <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
@@ -48,12 +50,12 @@
 
     <div id="overlay">
         <div class="loader"></div>
-        ZYM ENGINE INITIALIZING...
+        <div id="status-text">INITIALIZING ENGINE...</div>
     </div>
 
     <header>
         <div class="balance-box">
-            <div class="w-10 h-10 flex items-center justify-center bg-black border border-cyan-500/40 rounded-xl shadow-[0_0_15px_rgba(0,242,255,0.1)]">
+            <div class="w-10 h-10 flex items-center justify-center bg-black border border-cyan-500/40 rounded-xl">
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#00f2ff" stroke-width="2.5"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
             </div>
             <div>
@@ -120,11 +122,11 @@
     </div>
 
     <script>
+        // ১. টেলিগ্রাম এসডিকে শুরুতে সেটআপ
         const tg = window.Telegram.WebApp;
-        tg.ready(); // টেলিগ্রামকে জানানো যে অ্যাপ তৈরি
-        tg.expand(); // ফুল স্ক্রিন করা
+        tg.ready();
+        tg.expand();
 
-        // --- OBFUSCATED STORAGE ---
         const ZYM_STORE = {
             set: (k, v) => localStorage.setItem('zym_'+k, btoa(encodeURIComponent(JSON.stringify(v)))),
             get: (k) => { 
@@ -135,9 +137,6 @@
             remove: (k) => localStorage.removeItem('zym_'+k)
         };
 
-        const tgUser = tg.initDataUnsafe?.user;
-        const tgID = tgUser?.id?.toString();
-        const tgName = (tgUser?.first_name || "GUEST").toUpperCase();
         const SECRET = "ZYM_FLUX_99";
         const SESSION_LIMIT = 10 * 60 * 1000;
         const DURATION = 8 * 3600;
@@ -153,32 +152,35 @@
         const auth = firebase.auth();
         const db = firebase.firestore();
 
-        let mainBalance = parseFloat(ZYM_STORE.get('bal')) || 0;
-        let MINE_LIMIT = parseFloat(ZYM_STORE.get('mine_limit')) || 10000; 
-        let startTime = ZYM_STORE.get('start_ts');
-        let ticker = null;
+        let tgID, tgName, mainBalance, MINE_LIMIT, startTime, ticker;
 
-        function formatBalance(num) {
-            if (num < 1000) return Math.floor(num).toString();
-            let suffix = ""; let val = 0;
-            if (num >= 1000000000) { val = num / 1000000000; suffix = "B"; }
-            else if (num >= 1000000) { val = num / 1000000; suffix = "M"; }
-            else if (num >= 1000) { val = num / 1000; suffix = "K"; }
-            return val.toFixed(2) + suffix;
+        async function startApp() {
+            // ২. টেলিগ্রাম ডাটা চেক করার জন্য লুপ (মাঝে মাঝে ডাটা আসতে দেরি হয়)
+            let attempts = 0;
+            const checkInterval = setInterval(async () => {
+                const user = tg.initDataUnsafe?.user;
+                attempts++;
+
+                if (user?.id) {
+                    clearInterval(checkInterval);
+                    tgID = user.id.toString();
+                    tgName = (user.first_name || "GUEST").toUpperCase();
+                    initLogic(); // ডাটা পেলে মেইন লজিকে যাবে
+                } else if (attempts > 5) {
+                    clearInterval(checkInterval);
+                    // যদি পিসি ব্রাউজারে বা সরাসরি লিঙ্কে খুলে থাকে
+                    document.getElementById('status-text').innerHTML = 
+                        `<span style="color:red">ERROR: TELEGRAM AUTH FAILED</span><br>
+                         <small style="color:gray; font-size:10px; letter-spacing:0">Please open via ZYM Bot Menu</small>`;
+                    document.querySelector('.loader').style.display = 'none';
+                }
+            }, 500);
         }
 
-        async function initApp() {
-            // মোবাইল বা বটের আইডি চেক করার জন্য একটু সময় নেওয়া
-            if (!tgID) {
-                setTimeout(() => {
-                    if (!tg.initDataUnsafe?.user?.id) {
-                        document.getElementById('overlay').innerHTML = "ERROR: PLEASE OPEN IN TELEGRAM APP";
-                    } else {
-                        location.reload();
-                    }
-                }, 1000);
-                return;
-            }
+        async function initLogic() {
+            mainBalance = parseFloat(ZYM_STORE.get('bal')) || 0;
+            MINE_LIMIT = parseFloat(ZYM_STORE.get('mine_limit')) || 10000;
+            startTime = ZYM_STORE.get('start_ts');
 
             const lastActive = ZYM_STORE.get('session_ts');
             const now = Date.now();
@@ -218,7 +220,7 @@
                 ZYM_STORE.set('session_ts', Date.now());
                 renderApp();
             } catch (e) { 
-                document.getElementById('overlay').innerHTML = `SYNC FAILED: ${e.message}`;
+                document.getElementById('status-text').innerText = "SYNC ERROR: " + e.message;
             }
         }
 
@@ -228,6 +230,15 @@
             document.getElementById('mining-power-text').innerText = MINE_LIMIT.toLocaleString();
             document.getElementById('overlay').style.display = 'none';
             if (startTime) startTicker();
+        }
+
+        function formatBalance(num) {
+            if (num < 1000) return Math.floor(num).toString();
+            let suffix = ""; let val = 0;
+            if (num >= 1000000000) { val = num / 1000000000; suffix = "B"; }
+            else if (num >= 1000000) { val = num / 1000000; suffix = "M"; }
+            else if (num >= 1000) { val = num / 1000; suffix = "K"; }
+            return val.toFixed(2) + suffix;
         }
 
         function startTicker() {
@@ -240,7 +251,6 @@
                 const remaining = DURATION - elapsed;
                 
                 if (remaining > 0) {
-                    // ৪টি ডেসিমেল দিলে মাইনিং দ্রুত হচ্ছে মনে হয়
                     document.getElementById('mining-display').innerText = (elapsed * RATE).toFixed(4);
                     const h = Math.floor(remaining / 3600);
                     const m = Math.floor((remaining % 3600) / 60);
@@ -267,28 +277,25 @@
             } else if (btn.classList.contains('btn-claim')) {
                 btn.innerText = "VERIFYING...";
                 btn.disabled = true;
-                
                 try {
                     await db.collection('users').doc(tgID).update({
                         balance: firebase.firestore.FieldValue.increment(MINE_LIMIT),
                         last_claim: firebase.firestore.FieldValue.serverTimestamp()
                     });
-                    
                     mainBalance += MINE_LIMIT;
                     ZYM_STORE.set('bal', mainBalance);
                     ZYM_STORE.remove('start_ts');
                     ZYM_STORE.set('session_ts', Date.now());
-                    
-                    alert("CLAIM SUCCESSFUL!");
                     location.reload();
                 } catch(e) {
-                    alert("Claim Denied: " + e.message);
+                    alert("Claim Error: " + e.message);
                     location.reload();
                 }
             }
         });
 
-        initApp();
+        // ৩. অ্যাপ স্টার্ট
+        startApp();
     </script>
 </body>
 </html>
