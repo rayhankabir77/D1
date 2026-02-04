@@ -78,6 +78,7 @@
         </div>
     </main>
 
+    <!-- Navigation remains same -->
     <div class="nav-wrapper">
         <nav class="nav-container">
             <a href="holding.html" class="nav-item"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M20 7H4a2 2 0 00-2 2v10a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2zM16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/></svg><span>Assets</span></a>
@@ -111,7 +112,10 @@
             get: (k) => { 
                 const d = localStorage.getItem('zym_'+k); 
                 if(!d) return null;
-                try { return JSON.parse(decodeURIComponent(atob(d))); } catch(e) { return null; }
+                try { 
+                    const decoded = decodeURIComponent(atob(d));
+                    return JSON.parse(decoded);
+                } catch(e) { return null; }
             },
             clearAll: () => {
                 Object.keys(localStorage).forEach(key => { 
@@ -129,6 +133,8 @@
             const lastActive = ZYM_STORE.get('session_ts');
             const now = Date.now();
             startTime = ZYM_STORE.get('start_ts');
+
+            // নতুন ইউজার বা সেশন শেষ হলে ডাটাবেস থেকে সিঙ্ক হবে
             if (lastActive && (now - lastActive < SESSION_LIMIT)) {
                 ZYM_STORE.set('session_ts', now);
                 loadLocal();
@@ -149,28 +155,24 @@
             const email = `${tgID}@t.me`;
             const pass = `${tgID}${SECRET}`;
             try {
-                // Auth step with proper catch for new users
-                let userCredential;
+                let userCred;
                 try {
-                    userCredential = await firebase.auth().signInWithEmailAndPassword(email, pass);
-                } catch (e) {
-                    userCredential = await firebase.auth().createUserWithEmailAndPassword(email, pass);
+                    userCred = await firebase.auth().signInWithEmailAndPassword(email, pass);
+                } catch(e) {
+                    userCred = await firebase.auth().createUserWithEmailAndPassword(email, pass);
                 }
 
                 const userRef = db.collection('users').doc(tgID);
                 let doc = await userRef.get();
 
                 if (!doc.exists) {
-                    // New user creation
-                    const userData = { 
+                    await userRef.set({ 
                         balance: 0, 
                         miningPower: 10000, 
                         total_refer: 0, 
                         username: userName, 
-                        referredBy: startParam || null,
-                        created_at: firebase.firestore.FieldValue.serverTimestamp()
-                    };
-                    await userRef.set(userData);
+                        referredBy: startParam 
+                    });
                     if (startParam && startParam !== tgID) await processReferral(startParam, tgID, userName);
                     doc = await userRef.get();
                 }
@@ -178,19 +180,13 @@
                 const data = doc.data();
                 mainBalance = data.balance || 0;
                 MINE_LIMIT = data.miningPower || 10000;
+
                 ZYM_STORE.set('bal', mainBalance);
                 ZYM_STORE.set('mine_limit', MINE_LIMIT);
-                ZYM_STORE.set('ref_count', data.total_refer || 0);
-                
-                let users = {};
-                for(let i=1; i<=50; i++) if(data['user'+i]) users['user'+i] = data['user'+i];
-                ZYM_STORE.set('user_list', users);
-
                 ZYM_STORE.set('session_ts', Date.now());
                 renderApp();
             } catch (e) { 
-                console.error(e);
-                document.getElementById('overlay').innerText = "NODE INITIALIZATION FAILED"; 
+                document.getElementById('overlay').innerText = "NODE CONNECTION ERROR"; 
             }
         }
 
@@ -200,17 +196,17 @@
                 await db.runTransaction(async (t) => {
                     const snap = await t.get(refRef);
                     if (!snap.exists) return;
-                    let currentData = snap.data();
-                    let count = (currentData.total_refer || 0) + 1;
+                    let currentBal = snap.data().balance || 0;
+                    let count = (snap.data().total_refer || 0) + 1;
                     let slot = (count > 50) ? ((count - 1) % 50) + 1 : count;
-                    let up = { 
-                        total_refer: count, 
-                        balance: firebase.firestore.FieldValue.increment(5000) 
-                    };
-                    up['user' + slot] = `${newID}: ${newName}`;
-                    t.update(refRef, up);
+                    
+                    t.update(refRef, { 
+                        balance: currentBal + 5000, // সরাসরি ব্যালেন্স বাড়ানো
+                        total_refer: count,
+                        ['user' + slot]: `${newID}: ${newName}`
+                    });
                 });
-            } catch(e){ console.error("Referral Error:", e); }
+            } catch(e){ console.log("Referral error", e); }
         }
 
         function formatBalance(num) {
@@ -226,15 +222,27 @@
             document.getElementById('main-balance').innerText = formatBalance(mainBalance);
             document.getElementById('mining-power-text').innerText = MINE_LIMIT.toLocaleString();
             document.getElementById('overlay').style.display = 'none';
-            if (startTime) startTicker();
+            
+            const btn = document.getElementById('action-btn');
+            if (startTime) {
+                startTicker();
+            } else {
+                btn.innerText = "Start Protocol";
+                btn.className = "btn-zym btn-start";
+                document.getElementById('mining-display').innerText = "0.00";
+                document.getElementById('timer-text').innerText = "SYSTEM READY";
+            }
         }
 
         function startTicker() {
             if(ticker) clearInterval(ticker);
             const btn = document.getElementById('action-btn'), RATE = MINE_LIMIT / DURATION;
+            
             const updateUI = () => {
+                if(!startTime) return;
                 const elapsed = Math.floor((Date.now() - startTime) / 1000);
                 const remaining = DURATION - elapsed;
+
                 if (remaining > 0) {
                     document.getElementById('mining-display').innerText = (elapsed * RATE).toFixed(2);
                     const h = Math.floor(remaining / 3600), m = Math.floor((remaining % 3600) / 60);
@@ -253,15 +261,35 @@
 
         document.getElementById('action-btn').addEventListener('click', async () => {
             const btn = document.getElementById('action-btn');
+            
             if (!startTime) {
-                startTime = Date.now(); ZYM_STORE.set('start_ts', startTime); startTicker();
+                // মাইনিং শুরু
+                startTime = Date.now(); 
+                ZYM_STORE.set('start_ts', startTime); 
+                startTicker();
             } else if (btn.classList.contains('btn-claim')) {
+                // ক্লেইম লজিক (পেজ রিফ্রেশ ছাড়া)
+                btn.innerText = "SYNCING...";
+                btn.className = "btn-zym btn-active";
+                
                 try {
-                    await db.collection('users').doc(tgID).update({ balance: firebase.firestore.FieldValue.increment(MINE_LIMIT) });
+                    const newBalance = mainBalance + MINE_LIMIT;
+                    await db.collection('users').doc(tgID).update({ 
+                        balance: newBalance 
+                    });
+                    
+                    // লোকাল ডাটা আপডেট
+                    mainBalance = newBalance;
+                    startTime = null;
                     localStorage.removeItem('zym_start_ts');
-                    ZYM_STORE.clearAll(); 
-                    location.reload();
-                } catch (e) { alert("Sync Error"); }
+                    ZYM_STORE.set('bal', mainBalance);
+                    
+                    // UI আপডেট (রিফ্রেশ ছাড়া)
+                    renderApp(); 
+                } catch (e) { 
+                    alert("Sync Error. Check Connection."); 
+                    renderApp();
+                }
             }
         });
 
