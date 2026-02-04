@@ -77,7 +77,7 @@
 
         .history-section { margin-top: 25px; padding-bottom: 120px; }
         .node-row {
-            background: rgba(255,255,255,0.02); border-radius: 14px; padding: 10px 15px;
+            background: rgba(255,255,255,0.02); border-radius: 14px; padding: 12px 15px;
             display: flex; justify-content: space-between; align-items: center;
             border: 1px solid rgba(255,255,255,0.03); margin-bottom: 8px;
         }
@@ -112,7 +112,6 @@
             <div class="stat-container">
                 <div class="stat-box">
                     <span class="text-[10px] font-black text-gray-500 uppercase">Total Nodes</span>
-                    <!-- লোকাল স্টোরেজ থেকে এখানে ডাটা বসবে -->
                     <span id="ref-count-display" class="value-text">0 <span class="text-xs text-cyan-400 ml-1">Nodes</span></span>
                 </div>
                 <div class="stat-box" style="background: rgba(0, 242, 255, 0.08);">
@@ -133,9 +132,9 @@
         </div>
 
         <div class="history-section">
-            <span class="text-[10px] font-black text-gray-700 uppercase tracking-[3px] mb-4 block">Last 50 Nodes History</span>
+            <span class="text-[10px] font-black text-gray-700 uppercase tracking-[3px] mb-4 block">Active Network Nodes</span>
             <div id="node-list">
-                <!-- History loaded via JS -->
+                <!-- Real users from user_list will load here -->
             </div>
         </div>
     </main>
@@ -152,12 +151,7 @@
                 <span>Tasks</span>
             </a>
             <a href="index.html" class="nav-main-btn">
-                <svg viewBox="0 0 100 100" class="w-11 h-11">
-                    <path d="M50 5 L92 28 L92 72 L50 95 L8 72 L8 28 Z" fill="none" stroke="#d1d5db" stroke-width="7"/>
-                    <path d="M25 40 H45 L30 65 H50" stroke="#fff" stroke-width="8" fill="none" stroke-linecap="round"/>
-                    <path d="M55 65 V35 L70 50 L85 35 V65" stroke="#fff" stroke-width="8" fill="none" stroke-linecap="round"/>
-                    <path d="M55 15 L40 48 L52 48 L45 85 L70 42 L52 42 L62 15 Z" fill="#00f2ff" />
-                </svg>
+                <svg viewBox="0 0 100 100" class="w-11 h-11"><path d="M50 5 L92 28 L92 72 L50 95 L8 72 L8 28 Z" fill="none" stroke="#d1d5db" stroke-width="7"/><path d="M55 15 L40 48 L52 48 L45 85 L70 42 L52 42 L62 15 Z" fill="#00f2ff" /></svg>
             </a>
             <a href="kinship.html" class="nav-item active">
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M9 7a4 4 0 110-8 4 4 0 010 8zm10 14v-2a4 4 0 00-3-3.87m-4-12a4 4 0 010 7.75"/></svg>
@@ -174,7 +168,6 @@
         const tg = window.Telegram.WebApp;
         tg.expand();
 
-        // --- লোকাল স্টোরেজ হেল্পার (আপনার আগের কোডের সাথে মিল রেখে) ---
         const ZYM_STORE = {
             get: (k) => { 
                 const d = localStorage.getItem('zym_'+k); 
@@ -183,28 +176,24 @@
             }
         };
 
-        // ১. টোটাল রেফার এবং লিঙ্ক সেটআপ
         function initNetworkData() {
             const user = tg.initDataUnsafe?.user;
-            const botUsername = "Ghiyvndbot"; 
+            const botUsername = "Ghiyvndbot"; // আপনার বটের ইউজারনেম
             
-            // লিঙ্ক জেনারেট
-            const link = user ? `https://t.me/Ghiyvndbot?startapp=${user.id}` : "https://t.me/ZYM_PRO_BOT?startapp=7867767";
+            // সঠিক লিঙ্ক জেনারেশন
+            const tgID = user?.id || "7867767";
+            const link = `https://t.me/${botUsername}?startapp=${tgID}`;
             document.getElementById('ref-link-text').innerText = link;
 
-            // লোকাল স্টোরেজ থেকে রেফার কাউন্ট লোড (কী: ref_count)
+            // টোটাল নোড সংখ্যা
             const count = ZYM_STORE.get('ref_count') || 0;
             document.getElementById('ref-count-display').innerHTML = `${count} <span class="text-xs text-cyan-400 ml-1">Nodes</span>`;
         }
 
-        // ২. গ্যারান্টিড কপি ফাংশন
         function copyRef() {
             const link = document.getElementById('ref-link-text').innerText;
             const el = document.createElement('textarea');
             el.value = link;
-            el.setAttribute('readonly', '');
-            el.style.position = 'absolute';
-            el.style.left = '-9999px';
             document.body.appendChild(el);
             el.select();
             document.execCommand('copy');
@@ -216,22 +205,43 @@
             setTimeout(() => notify.classList.remove('show'), 2000);
         }
 
-        // ৩. ৫০ জনের হিস্টোরি জেনারেটর
-        function loadHistory() {
+        // আসল ইউজার লিস্ট লোড করার ফাংশন
+        function loadRealNodes() {
             const container = document.getElementById('node-list');
-            for (let i = 1; i <= 50; i++) {
+            const userList = ZYM_STORE.get('user_list') || {}; // index.html থেকে সেভ হওয়া লিস্ট
+            
+            const entries = Object.entries(userList);
+            
+            if (entries.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-10 opacity-30">
+                        <p class="text-[10px] font-black uppercase tracking-widest">No active nodes found</p>
+                    </div>
+                `;
+                return;
+            }
+
+            // লিস্ট ক্লিন করে রিয়েল ডাটা ইনসার্ট করা
+            container.innerHTML = ""; 
+            entries.forEach(([key, value]) => {
+                // value ফরম্যাট: "ID: Username" হলে শুধু Username নেওয়ার চেষ্টা
+                const displayName = value.includes(':') ? value.split(':')[1].trim() : value;
+
                 const row = document.createElement('div');
                 row.className = "node-row";
                 row.innerHTML = `
-                    <span class="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Node #${Math.floor(100000 + Math.random() * 900000)}</span>
+                    <div class="flex items-center gap-3">
+                        <div class="w-2 h-2 rounded-full bg-cyan-500 shadow-[0_0_8px_#00f2ff]"></div>
+                        <span class="text-[11px] font-black text-white uppercase tracking-wider">${displayName}</span>
+                    </div>
                     <span class="text-[10px] font-black text-cyan-400">+5,000 ZYM</span>
                 `;
                 container.appendChild(row);
-            }
+            });
         }
 
         initNetworkData();
-        loadHistory();
+        loadRealNodes();
     </script>
 </body>
 </html>
