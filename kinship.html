@@ -4,9 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>ZYM Network - Nodes</title>
+    
     <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+
     <style>
         :root { --bg: #000; --accent: #00f2ff; --card-bg: #0d0d0d; --text-main: #e0e0e0; }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -29,8 +31,13 @@
     </style>
 </head>
 <body>
+
     <div id="copy-notification">Referral Link Copied</div>
-    <header><h1 class="text-xl font-black text-white italic tracking-tighter uppercase">ZYM <span class="text-cyan-400">NETWORK</span></h1></header>
+
+    <header>
+        <h1 class="text-xl font-black text-white italic tracking-tighter uppercase">ZYM <span class="text-cyan-400">NETWORK</span></h1>
+    </header>
+
     <main>
         <div class="network-card">
             <h2 class="text-sm font-black text-white uppercase tracking-widest mb-4">Kinship Protocol</h2>
@@ -45,24 +52,41 @@
                 </div>
             </div>
         </div>
+
         <div class="invitation-hub">
             <span class="text-[10px] font-black text-cyan-500 uppercase tracking-widest mb-3 block">Your Invitation Hub</span>
-            <div id="ref-link-text" class="link-display">Loading...</div>
+            <div id="ref-link-text" class="link-display">Loading protocol link...</div>
             <button onclick="copyRef()" class="btn-copy-compact">Copy My Link</button>
         </div>
+
         <div class="history-section">
             <span class="text-[10px] font-black text-gray-700 uppercase tracking-[3px] mb-4 block">Active Network Nodes</span>
             <div id="node-list"></div>
         </div>
     </main>
 
+    <!-- নেভিগেশন আইকনসহ -->
     <div class="nav-wrapper">
         <nav class="nav-container">
-            <a href="holding.html" class="nav-item"><span>Assets</span></a>
-            <a href="objective.html" class="nav-item"><span>Tasks</span></a>
-            <a href="index.html" class="nav-main-btn"><svg viewBox="0 0 100 100" class="w-11 h-11"><path d="M50 5 L92 28 L92 72 L50 95 L8 72 L8 28 Z" fill="none" stroke="#d1d5db" stroke-width="7"/><path d="M55 15 L40 48 L52 48 L45 85 L70 42 L52 42 L62 15 Z" fill="#00f2ff" /></svg></a>
-            <a href="kinship.html" class="nav-item active"><span>Network</span></a>
-            <a href="config.html" class="nav-item"><span>Config</span></a>
+            <a href="holding.html" class="nav-item">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M20 7H4a2 2 0 00-2 2v10a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2zM16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/></svg>
+                <span>Assets</span>
+            </a>
+            <a href="objective.html" class="nav-item">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
+                <span>Tasks</span>
+            </a>
+            <a href="index.html" class="nav-main-btn">
+                <svg viewBox="0 0 100 100" class="w-11 h-11"><path d="M50 5 L92 28 L92 72 L50 95 L8 72 L8 28 Z" fill="none" stroke="#d1d5db" stroke-width="7"/><path d="M55 15 L40 48 L52 48 L45 85 L70 42 L52 42 L62 15 Z" fill="#00f2ff" /></svg>
+            </a>
+            <a href="kinship.html" class="nav-item active">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M9 7a4 4 0 110-8 4 4 0 010 8zm10 14v-2a4 4 0 00-3-3.87m-4-12a4 4 0 010 7.75"/></svg>
+                <span>Network</span>
+            </a>
+            <a href="config.html" class="nav-item">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><circle cx="12" cy="12" r="3"/></svg>
+                <span>Config</span>
+            </a>
         </nav>
     </div>
 
@@ -80,11 +104,9 @@
             const tgID = tg.initDataUnsafe?.user?.id?.toString() || "7867767";
             document.getElementById('ref-link-text').innerText = `https://t.me/Ghiyvndbot?startapp=${tgID}`;
 
-            // রেফারেল সংখ্যা দেখানো
             const count = ZYM_STORE.get('ref_count') || 0;
             document.getElementById('ref-count-display').innerHTML = `${count} <span class="text-xs text-cyan-400 ml-1">Nodes</span>`;
 
-            // রেফারেল লিস্ট দেখানো
             const container = document.getElementById('node-list');
             const userList = ZYM_STORE.get('user_list') || {}; 
             const entries = Object.entries(userList);
