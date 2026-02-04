@@ -30,11 +30,28 @@
         .nav-item.active { color: var(--accent); }
         .nav-main-btn { position: relative; top: -25px; width: 68px; height: 68px; background: #000; border-radius: 22px; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 30px rgba(0, 242, 255, 0.3); border: 4px solid var(--bg); }
         #overlay { position: fixed; inset: 0; background: #000; z-index: 9999; display: flex; align-items: center; justify-content: center; font-size: 12px; color: var(--accent); letter-spacing: 4px; font-weight: 900; }
+        
+        /* Security Modal */
+        #fraud-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 10000; display: none; align-items: center; justify-content: center; padding: 20px; }
+        .modal-box { background: #0d0d0d; border: 2px solid #ff3b3b; border-radius: 30px; padding: 30px; text-align: center; max-width: 320px; }
     </style>
 </head>
 <body>
 
     <div id="overlay">ZYM ENGINE INITIALIZING...</div>
+
+    <div id="fraud-modal">
+        <div class="modal-box">
+            <div class="mb-4 text-red-500">
+                <svg class="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+            </div>
+            <h2 class="text-xl font-black text-white mb-4 uppercase">System Security Alert</h2>
+            <p class="text-gray-400 text-xs font-bold leading-relaxed mb-6 uppercase tracking-wider">
+                You are attempting a fake referral process. Our protocol strictly prohibits fraudulent activities. Please use your legitimate ID to continue.
+            </p>
+            <button onclick="window.location.reload()" class="w-full h-12 bg-red-600 rounded-full font-black text-white uppercase text-xs">Acknowledge</button>
+        </div>
+    </div>
 
     <header>
         <div class="balance-box">
@@ -80,13 +97,11 @@
 
     <div class="nav-wrapper">
         <nav class="nav-container">
-            <a href="holding.html" class="nav-item"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M20 7H4a2 2 0 00-2 2v10a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2zM16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/></svg><span>Assets</span></a>
-            <a href="objective.html" class="nav-item"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg><span>Tasks</span></a>
-            <a href="synthesize.html" class="nav-main-btn">
-                <svg viewBox="0 0 100 100" class="w-11 h-11"><path d="M50 5 L92 28 L92 72 L50 95 L8 72 L8 28 Z" fill="none" stroke="#d1d5db" stroke-width="7"/><path d="M55 15 L40 48 L52 48 L45 85 L70 42 L52 42 L62 15 Z" fill="#00f2ff" /></svg>
-            </a>
-            <a href="kinship.html" class="nav-item"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M9 7a4 4 0 110-8 4 4 0 010 8zm10 14v-2a4 4 0 00-3-3.87m-4-12a4 4 0 010 7.75"/></svg><span>Network</span></a>
-            <a href="config.html" class="nav-item"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><circle cx="12" cy="12" r="3"/></svg><span>Config</span></a>
+            <a href="holding.html" class="nav-item"><span>Assets</span></a>
+            <a href="objective.html" class="nav-item"><span>Tasks</span></a>
+            <a href="index.html" class="nav-main-btn"><svg viewBox="0 0 100 100" class="w-11 h-11"><path d="M50 5 L92 28 L92 72 L50 95 L8 72 L8 28 Z" fill="none" stroke="#d1d5db" stroke-width="7"/><path d="M55 15 L40 48 L52 48 L45 85 L70 42 L52 42 L62 15 Z" fill="#00f2ff" /></svg></a>
+            <a href="kinship.html" class="nav-item"><span>Network</span></a>
+            <a href="config.html" class="nav-item"><span>Config</span></a>
         </nav>
     </div>
 
@@ -114,8 +129,12 @@
                 try { return JSON.parse(decodeURIComponent(atob(d))); } catch(e) { return null; }
             },
             clearAll: () => {
+                // মাইনিং টাইম এবং ইউজার আইডি ডিলিট করা হবে না
+                const protectedKeys = ['zym_start_ts', 'zym_uid']; 
                 Object.keys(localStorage).forEach(key => { 
-                    if(key.startsWith('zym_') && key !== 'zym_start_ts') localStorage.removeItem(key); 
+                    if(key.startsWith('zym_') && !protectedKeys.includes(key)) {
+                        localStorage.removeItem(key); 
+                    }
                 });
             }
         };
@@ -126,8 +145,18 @@
         let mainBalance = 0, MINE_LIMIT = 10000, startTime = null, ticker = null;
 
         async function initApp() {
+            // সিকিউরিটি চেক
+            const storedUID = ZYM_STORE.get('uid');
+            if (storedUID && storedUID !== tgID) {
+                document.getElementById('fraud-modal').style.display = 'flex';
+                document.getElementById('overlay').style.display = 'none';
+                return;
+            }
+
             const lastActive = ZYM_STORE.get('session_ts');
             const now = Date.now();
+            
+            // সেশন এক্সপায়ার হলে শুধু ডাটাবেস রিলেটেড ডাটা ক্লিন হবে
             if (lastActive && (now - lastActive < SESSION_LIMIT)) {
                 loadLocal();
             } else {
@@ -163,15 +192,18 @@
                 mainBalance = data.balance || 0;
                 MINE_LIMIT = data.miningPower || 10000;
 
-                // রেফারেল ডাটা সেভ করার আপডেট
                 const userList = {};
                 Object.keys(data).forEach(key => { if(key.startsWith('user')) userList[key] = data[key]; });
 
+                ZYM_STORE.set('uid', tgID); // সিকিউরিটি আইডি সেভ
                 ZYM_STORE.set('bal', mainBalance);
                 ZYM_STORE.set('mine_limit', MINE_LIMIT);
                 ZYM_STORE.set('ref_count', data.total_refer || 0);
                 ZYM_STORE.set('user_list', userList);
                 ZYM_STORE.set('session_ts', Date.now());
+                
+                // মাইনিং টাইম যদি আগে থেকে থাকে তবে তা রিলোড করা
+                startTime = ZYM_STORE.get('start_ts');
                 renderApp();
             } catch (e) { document.getElementById('overlay').innerText = "NODE CONNECTION ERROR"; }
         }
@@ -237,7 +269,9 @@
                 try {
                     const newBalance = mainBalance + MINE_LIMIT;
                     await db.collection('users').doc(tgID).update({ balance: newBalance });
-                    mainBalance = newBalance; startTime = null; localStorage.removeItem('zym_start_ts');
+                    mainBalance = newBalance; startTime = null; 
+                    // মাইনিং শেষ হলে start_ts ক্লিয়ার হবে
+                    localStorage.removeItem('zym_start_ts');
                     ZYM_STORE.set('bal', mainBalance); renderApp();
                 } catch (e) { alert("Sync Error"); renderApp(); }
             }
